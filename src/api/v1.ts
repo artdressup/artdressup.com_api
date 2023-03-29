@@ -62,6 +62,7 @@ api.get('/test', async (ctx: Context) => {
   await aaa()
   ctx.body = 'test'
 })
+
 api.get('/hello', async (ctx: Context) => {
   // const myimg = await loadImage('src/images/dressup/body/body_0001.png')
   // const myimg2 = await loadImage('src/images/dressup/hair/hair_0001.png')

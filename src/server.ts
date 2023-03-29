@@ -4,12 +4,58 @@ const Koa = require('koa');
 const Router = require('koa-router');
 const bodyParser = require('koa-bodyparser');
 const websockify = require('koa-websocket')
-import * as dotenv from 'dotenv'
-import ErrnoException = NodeJS.ErrnoException;
+
+const {createCanvas, loadImage, ImageData} = require('canvas');
+
+const fs = require('fs');
+const sharp = require('sharp');
+
+// import * as dotenv from 'dotenv'
+// import dotenv from 'dotenv'
+// import ErrnoException = NodeJS.ErrnoException;
 const cors = require('@koa/cors')
+require('dotenv').config()
+// dotenv.config()
+//
 
-dotenv.config()
 
+const {test, getImageFromS3, aaaa, bbbb, testImage, GetTokenId} = require('./common/s3_nft_util');
+const { callSmartContract, getCurrentGasPrice } = require('./common/contract');
+//
+//
+(async ()=>{
+    // await testaa();
+    // await testImage();
+  // const hash = await GetTokenId({body:1, hat:2});
+  // console.log('hash:', hash)
+  // await callSmartContract()
+  // await getCurrentGasPrice()
+})()
+
+// (async ()=>{
+//   const iBuffer = await test();
+//   const image = await loadImage(iBuffer)
+//   const canvas = createCanvas(image.width, image.height);
+//   const ctx = canvas.getContext('2d');
+//
+//   console.log("aa??")
+//   ctx.drawImage(image, 0, 0);
+//
+//   const outputBuffer = canvas.toBuffer('image/webp');
+//   console.log('Image drawn on the canvas');
+//   // ... 이미지를 저장하거나 다른 작업 수행
+//   // 이미지 파일로 저장
+//   const outputPath = './test.webp';
+//   fs.writeFile(outputPath, outputBuffer, (err: any) => {
+//     if (err) {
+//       console.error(`Error while saving image: ${err}`);
+//     } else {
+//       console.log(`Image saved at: ${outputPath}`);
+//     }
+//   });
+//  
+// })()
+//
 const httpServer = async () => {
   const app = new Koa(); // http
   const router = new Router();
@@ -30,63 +76,12 @@ const httpServer = async () => {
 type wsMsg = {type: string, data: any}
 const webSocketServer = async () => {
   const app = websockify(new Koa()); // websocket
-  const ws = new Router();
-
-  ws.get('/ws', (ctx: Context, next: any) => {
-    ctx.websocket.send('Hello, user ' + ctx.websocket.id);
-    console.log('socket address:', ctx.socket.address())
-
-    // 유저가 메시지를 보냈을때
-    ctx.websocket.on('message', function (message: any) {
-      // console.log(JSON.stringify(message))
-      // console.log(typeof message)
-      //
-      // if (typeof message === "object") {
-      //   console.log("여기 아냐??")
-      // }
-      try {
-        const msg = message.toString()
-
-        console.log(msg)
-
-      } catch (e) {
-        console.log(e)
-      }
-
-      ctx.websocket.send('pong');
-    });
-
-    setInterval(()=>{
-      ctx.websocket.send('pppong');
-    }, 3000)
-
-    // 유저가 나갔을 때
-    ctx.websocket.on('close', () => {
-      console.log(`User ${ctx.websocket.id} has left.`);
-    });
-  })
-
   const router = new Router();
+  const ws_nft_reservation = require('./api_ws/nft_reservation')
 
-  app.ws.use(ws.routes()).use(ws.allowedMethods());
+  router.use('/api_ws', ws_nft_reservation.routes())
 
-  // Regular middleware
-// Note it's app.ws.use and not app.use
-//   app.ws.use(function (ctx: Context, next: any) {
-//     // return `next` to pass the context (ctx) on to the next ws middleware
-//     return next(ctx);
-//   });
-//
-//   // Using routes
-//   app.ws.use(route.all('/test/:id', function (ctx: Context) {
-//     // `ctx` is the regular koa context created from the `ws` onConnection `socket.upgradeReq` object.
-//     // the websocket is added to the context on `ctx.websocket`.
-//     ctx.websocket.send('Hello World');
-//     ctx.websocket.on('message', function (message: string) {
-//       // do something with the message from client
-//       console.log(message);
-//     });
-//   }));
+  app.ws.use(router.routes()).use(router.allowedMethods());
 
   app.listen(3000, () => {
     console.log('listening to port 3000')
@@ -95,17 +90,16 @@ const webSocketServer = async () => {
 
 
 Promise.all([httpServer(), webSocketServer()])
-/*
-// arweave 업로드 코드 테스트!
-import { init } from './api/tWeave'
-const aaa = async () => {
-  await init()
-}
-
-aaa()
-
-setTimeout(()=>{
-}, 4000)
-*/
-
-console.log('hi')
+// /*
+// // arweave 업로드 코드 테스트!
+// import { init } from './api/tWeave'
+// const aaa = async () => {
+//   await init()
+// }
+//
+// aaa()
+//
+// setTimeout(() => {
+// }, 10000)
+//
+// console.log('hi')

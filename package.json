@@ -5,30 +5,40 @@
   "license": "MIT",
   "dependencies": {
     "@akord/akord-js": "^3.11.0",
+    "@aws-sdk/client-s3": "^3.299.0",
     "@koa/cors": "^4.0.0",
+    "@koa/router": "^12.0.0",
     "@types/imagemin-webp": "^7.0.0",
     "@types/koa": "^2.13.5",
-    "@types/node": "^18.15.0",
+    "@types/koa__router": "^12.0.0",
+    "@types/node": "^18.15.10",
     "arweave": "^1.13.1",
+    "buffer": "^6.0.3",
     "canvas": "^2.11.0",
+    "crypto": "^1.0.1",
     "dotenv": "^16.0.3",
     "koa": "^2.14.1",
     "koa-bodyparser": "^4.3.0",
     "koa-route": "^3.2.0",
     "koa-router": "^12.0.0",
     "koa-websocket": "^7.0.0",
+    "near-api-js": "^1.1.0",
+    "node-fetch": "^3.3.1",
     "request": "^2.88.2",
     "request-promise": "^4.2.6",
     "sharp": "^0.31.3",
+    "shortid": "^2.2.16",
     "testweave-sdk": "^0.2.2",
-    "typescript": "^4.9.5"
+    "typescript": "^5.0.2"
   },
   "scripts": {
     "build": "tsc",
     "start": "node ./bin/server.js",
-    "dev": "nodemon --exec ts-node ./src/server.ts"
+    "dev": "ts-node src/server.ts"
   },
   "devDependencies": {
+    "@tsconfig/node14": "^1.0.3",
+    "esm": "^3.2.25",
     "nodemon": "^2.0.21",
     "ts-node": "^10.9.1"
   }
