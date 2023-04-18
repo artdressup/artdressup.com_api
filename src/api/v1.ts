@@ -1,88 +1,88 @@
 import {Context} from "koa";
-import {Akord} from "@akord/akord-js";
 
 const Router = require('koa-router');
 const api = new Router();
-import * as dotenv from 'dotenv'
-const sharp = require('sharp')
+const {getContract, getTokenMetaData} = require('../common/contract')
+const {MakeCoordinationImage} = require('../common/s3_nft_util')
 
-dotenv.config()
+const TEST_KEY = process.env.TEST_KEY
 
-const email = process.env.EMAIL
-const password = process.env.PASSWORD
-
-async function aaa() {
-  const {akord, wallet, jwtToken} = await Akord.auth.signIn(email!, password!)
-
-  const aaa = await akord.vault.list()
-  // console.log('???')
-  // aaa[0].id
-  if (aaa.length > 0) {
-    console.log('>0')
-    const bbb = await akord.stack.list(aaa[0].id)
-    console.log(__dirname)
-    const file = NodeJs.File.fromPath(__dirname + '/../../hello.avif')
-    const result = await akord.stack.create(aaa[0].id, file, 'hello.avif')
-    console.log('stackId: ' + result.stackId)
-    console.log('transactionId: ' + result.transactionId)
-  }
-
-  // console.log(aaa)
-}
 async function convertPngToWebp(inputPath: string, outputPath: string) {
-  try {
-    await sharp(inputPath)
-      .webp({ quality: 100 }) // 원하는 품질 값을 설정하세요. (1-100 사이의 값)
-      .toFile(outputPath);
-
-    console.log('이미지가 성공적으로 WebP 형식으로 변환되었습니다.');
-  } catch (error) {
-    console.error('이미지 변환 중 오류가 발생했습니다:', error);
-  }
+    try {
+        await sharp(inputPath)
+            .webp({quality: 100}) // 원하는 품질 값을 설정하세요. (1-100 사이의 값)
+            .toFile(outputPath);
+        console.log('이미지가 성공적으로 WebP 형식으로 변환되었습니다.');
+    } catch (error) {
+        console.error('이미지 변환 중 오류가 발생했습니다:', error);
+    }
 }
 
-const inputPath = __dirname + '/../../hello.png';
-const outputPath = __dirname + '/../../hello.webp';
-
-async function bbb() {
-  await convertPngToWebp(inputPath, outputPath);
-}
-
-import {NodeJs} from "@akord/akord-js/lib/types/file";
-
-console.log("aa:" + process.env.EMAIL)
-
-// const fs = require('fs')
-// const {createCanvas, loadImage} = require('canvas')
-// const canvas = createCanvas(512, 512)
-
-api.get('/test', async (ctx: Context) => {
-  console.log('???')
-  await bbb()
-  await aaa()
-  ctx.body = 'test'
-})
-
-api.get('/hello', async (ctx: Context) => {
-  // const myimg = await loadImage('src/images/dressup/body/body_0001.png')
-  // const myimg2 = await loadImage('src/images/dressup/hair/hair_0001.png')
-  // const myimg3 = await loadImage('src/images/dressup/pants/pants_0001.png')
-  // const myimg4 = await loadImage('src/images/dressup/shirt/shirt_0001.png')
-  // const myimg5 = await loadImage('src/images/dressup/shoes/shoes_0001.png')
-  //
-  // const context = canvas.getContext('2d')
-  // context.fillStyle = '#ff0000'
-  // context.fillRect(0, 0, 512, 512)
-  // context.drawImage(myimg, 0, 0, 512, 512)
-  // context.drawImage(myimg2, 0, 0, 512, 512)
-  // context.drawImage(myimg3, 0, 0, 512, 512)
-  // context.drawImage(myimg4, 0, 0, 512, 512)
-  // context.drawImage(myimg5, 0, 0, 512, 512)
-  //
-  // const imgBuffer = canvas.toBuffer('image/png')
-  // fs.writeFileSync('./hello.png', imgBuffer)
-  ctx.body = 'aa';
+api.get('/health', async (ctx: Context) => {
+    ctx.type = 'application/json';
+    ctx.body = {hello: 'world'}
 });
+
+api.post('/getnft', async (ctx: Context) => {
+    try {
+        const req: any = ctx.request;
+        const body = req['body'];
+        const account_id = body.account_id;
+        const token_id = body.token_id;
+
+        const coordination = body.coordination
+
+        console.log('body::', body)
+        // console.log('body::', body.username)
+
+        const url = await MakeCoordinationImage(coordination)
+        const metadata = await getTokenMetaData(url)
+        //
+        console.log('url::', url)
+        console.log('metadata::', metadata)
+        // // 여기서는 스마트 계약 완료 처리!!
+        const contract = await getContract();
+        const o_id = await contract.get_owner_id();
+        console.log('o_id:', o_id);
+
+        const result = await contract.complete_reservation(account_id, token_id, metadata)
+        console.log('complete_reservation::result::', result)
+        const transaction_hash = result.transaction.hash
+
+        ctx.type = 'application/json';
+        ctx.body = {transaction_hash, token_id};
+    } catch (e) {
+        console.error(e)
+        ctx.throw(400, `Bad Request`)
+    }
+});
+
+// api.post('/delres', async (ctx: Context) => {
+//     try {
+//         const req: any = ctx.request;
+//         const body = req['body'];
+//         const account_id = body.account_id;
+//         const testkey = body.testkey;
+//
+//         if (TEST_KEY !== testkey) {
+//             throw new Error('You do not have permission.')
+//         }
+//
+//         const contract = await getContract();
+//         const o_id = await contract.get_owner_id();
+//         console.log('o_id:', o_id);
+//
+//         const result = await contract.del_reservations(account_id)
+//         console.log('del_reservation::result::', result)
+//         const transaction_hash = result.transaction.hash
+//
+//         ctx.type = 'application/json';
+//         ctx.body = {transaction_hash};
+//     } catch (e) {
+//         console.error(e)
+//         ctx.throw(400, `Bad Request`)
+//     }
+// })
 
 
 module.exports = api;

@@ -14,7 +14,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
             if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
             if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
@@ -45,25 +45,15 @@ var fs = require('fs');
 var sharp = require('sharp');
 var cors = require('@koa/cors');
 require('dotenv').config();
-var _b = require('./common/s3lib'), test = _b.test, getImageFromS3 = _b.getImageFromS3, aaaa = _b.aaaa, bbbb = _b.bbbb, testImage = _b.testImage, GetTokenId = _b.GetTokenId;
-var callSmartContract = require('./common/contract').callSmartContract;
-(function () { return __awaiter(void 0, void 0, void 0, function () {
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0: return [4, callSmartContract()];
-            case 1:
-                _a.sent();
-                return [2];
-        }
-    });
-}); })();
+var _b = require('./common/s3_nft_util'), test = _b.test, getImageFromS3 = _b.getImageFromS3, aaaa = _b.aaaa, bbbb = _b.bbbb, testImage = _b.testImage, GetTokenId = _b.GetTokenId;
+var _c = require('./common/contract'), callSmartContract = _c.callSmartContract, getCurrentGasPrice = _c.getCurrentGasPrice;
 var httpServer = function () { return __awaiter(void 0, void 0, void 0, function () {
     var app, router, apiV1;
     return __generator(this, function (_a) {
         app = new Koa();
         router = new Router();
         apiV1 = require('./api/v1');
-        router.use('/api/v1', apiV1.routes());
+        router.use('/api', apiV1.routes());
         app.use(cors()).use(bodyParser()).use(router.routes()).use(router.allowedMethods());
         app.listen(4000, function () {
             console.log('listening to port 4000');
@@ -71,38 +61,5 @@ var httpServer = function () { return __awaiter(void 0, void 0, void 0, function
         return [2];
     });
 }); };
-var webSocketServer = function () { return __awaiter(void 0, void 0, void 0, function () {
-    var app, ws, router;
-    return __generator(this, function (_a) {
-        app = websockify(new Koa());
-        ws = new Router();
-        ws.get('/ws', function (ctx, next) {
-            ctx.websocket.send('Hello, user ' + ctx.websocket.id);
-            console.log('socket address:', ctx.socket.address());
-            ctx.websocket.on('message', function (message) {
-                try {
-                    var msg = message.toString();
-                    console.log(msg);
-                }
-                catch (e) {
-                    console.log(e);
-                }
-                ctx.websocket.send('pong');
-            });
-            setInterval(function () {
-                ctx.websocket.send('pppong');
-            }, 3000);
-            ctx.websocket.on('close', function () {
-                console.log("User " + ctx.websocket.id + " has left.");
-            });
-        });
-        router = new Router();
-        app.ws.use(ws.routes()).use(ws.allowedMethods());
-        app.listen(3000, function () {
-            console.log('listening to port 3000');
-        });
-        return [2];
-    });
-}); };
-Promise.all([httpServer(), webSocketServer()]);
+Promise.all([httpServer()]);
 //# sourceMappingURL=server.js.map

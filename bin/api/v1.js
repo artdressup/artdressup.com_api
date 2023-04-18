@@ -14,7 +14,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
             if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
             if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
@@ -35,51 +35,12 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-var akord_js_1 = require("@akord/akord-js");
 var Router = require('koa-router');
 var api = new Router();
-var dotenv = __importStar(require("dotenv"));
-var sharp = require('sharp');
-dotenv.config();
-var email = process.env.EMAIL;
-var password = process.env.PASSWORD;
-function aaa() {
-    return __awaiter(this, void 0, void 0, function () {
-        var _a, akord, wallet, jwtToken, aaa, bbb_1, file, result;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
-                case 0: return [4, akord_js_1.Akord.auth.signIn(email, password)];
-                case 1:
-                    _a = _b.sent(), akord = _a.akord, wallet = _a.wallet, jwtToken = _a.jwtToken;
-                    return [4, akord.vault.list()];
-                case 2:
-                    aaa = _b.sent();
-                    if (!(aaa.length > 0)) return [3, 5];
-                    console.log('>0');
-                    return [4, akord.stack.list(aaa[0].id)];
-                case 3:
-                    bbb_1 = _b.sent();
-                    console.log(__dirname);
-                    file = file_1.NodeJs.File.fromPath(__dirname + '/../../hello.avif');
-                    return [4, akord.stack.create(aaa[0].id, file, 'hello.avif')];
-                case 4:
-                    result = _b.sent();
-                    console.log('stackId: ' + result.stackId);
-                    console.log('transactionId: ' + result.transactionId);
-                    _b.label = 5;
-                case 5: return [2];
-            }
-        });
-    });
-}
+var _a = require('../common/contract'), getContract = _a.getContract, getTokenMetaData = _a.getTokenMetaData;
+var MakeCoordinationImage = require('../common/s3_nft_util').MakeCoordinationImage;
+var TEST_KEY = process.env.TEST_KEY;
 function convertPngToWebp(inputPath, outputPath) {
     return __awaiter(this, void 0, void 0, function () {
         var error_1;
@@ -103,42 +64,55 @@ function convertPngToWebp(inputPath, outputPath) {
         });
     });
 }
-var inputPath = __dirname + '/../../hello.png';
-var outputPath = __dirname + '/../../hello.webp';
-function bbb() {
-    return __awaiter(this, void 0, void 0, function () {
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0: return [4, convertPngToWebp(inputPath, outputPath)];
-                case 1:
-                    _a.sent();
-                    return [2];
-            }
-        });
+api.get('/health', function (ctx) { return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        ctx.type = 'application/json';
+        ctx.body = { hello: 'world' };
+        return [2];
     });
-}
-var file_1 = require("@akord/akord-js/lib/types/file");
-console.log("aa:" + process.env.EMAIL);
-api.get('/test', function (ctx) { return __awaiter(void 0, void 0, void 0, function () {
+}); });
+api.post('/getnft', function (ctx) { return __awaiter(void 0, void 0, void 0, function () {
+    var req, body, account_id, token_id, coordination, url, metadata, contract, o_id, result, transaction_hash, e_1;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
-                console.log('???');
-                return [4, bbb()];
+                _a.trys.push([0, 6, , 7]);
+                req = ctx.request;
+                body = req['body'];
+                account_id = body.account_id;
+                token_id = body.token_id;
+                coordination = body.coordination;
+                console.log('body::', body);
+                return [4, MakeCoordinationImage(coordination)];
             case 1:
-                _a.sent();
-                return [4, aaa()];
+                url = _a.sent();
+                return [4, getTokenMetaData(url)];
             case 2:
-                _a.sent();
-                ctx.body = 'test';
-                return [2];
+                metadata = _a.sent();
+                console.log('url::', url);
+                console.log('metadata::', metadata);
+                return [4, getContract()];
+            case 3:
+                contract = _a.sent();
+                return [4, contract.get_owner_id()];
+            case 4:
+                o_id = _a.sent();
+                console.log('o_id:', o_id);
+                return [4, contract.complete_reservation(account_id, token_id, metadata)];
+            case 5:
+                result = _a.sent();
+                console.log('complete_reservation::result::', result);
+                transaction_hash = result.transaction.hash;
+                ctx.type = 'application/json';
+                ctx.body = { transaction_hash: transaction_hash, token_id: token_id };
+                return [3, 7];
+            case 6:
+                e_1 = _a.sent();
+                console.error(e_1);
+                ctx.throw(400, "Bad Request");
+                return [3, 7];
+            case 7: return [2];
         }
-    });
-}); });
-api.get('/hello', function (ctx) { return __awaiter(void 0, void 0, void 0, function () {
-    return __generator(this, function (_a) {
-        ctx.body = 'aa';
-        return [2];
     });
 }); });
 module.exports = api;

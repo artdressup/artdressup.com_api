@@ -23,14 +23,14 @@ const {test, getImageFromS3, aaaa, bbbb, testImage, GetTokenId} = require('./com
 const { callSmartContract, getCurrentGasPrice } = require('./common/contract');
 //
 //
-(async ()=>{
+// (async ()=>{
     // await testaa();
     // await testImage();
   // const hash = await GetTokenId({body:1, hat:2});
   // console.log('hash:', hash)
   // await callSmartContract()
   // await getCurrentGasPrice()
-})()
+// })()
 
 // (async ()=>{
 //   const iBuffer = await test();
@@ -61,7 +61,7 @@ const httpServer = async () => {
   const router = new Router();
   const apiV1 = require('./api/v1')
 
-  router.use('/api/v1', apiV1.routes());
+  router.use('/api', apiV1.routes());
 // app.use((ctx: Context) => {
 //   ctx.body = 'hello, ';
 // });
@@ -73,23 +73,24 @@ const httpServer = async () => {
   })
 }
 
-type wsMsg = {type: string, data: any}
-const webSocketServer = async () => {
-  const app = websockify(new Koa()); // websocket
-  const router = new Router();
-  const ws_nft_reservation = require('./api_ws/nft_reservation')
+// type wsMsg = {type: string, data: any}
+// const webSocketServer = async () => {
+//   const app = websockify(new Koa()); // websocket
+//   const router = new Router();
+//   const ws_nft_reservation = require('./api_ws/nft_reservation')
+//
+//   router.use('/api_ws', ws_nft_reservation.routes())
+//
+//   app.ws.use(router.routes()).use(router.allowedMethods());
+//
+//   app.listen(3000, () => {
+//     console.log('listening to port 3000')
+//   })
+// }
 
-  router.use('/api_ws', ws_nft_reservation.routes())
 
-  app.ws.use(router.routes()).use(router.allowedMethods());
+Promise.all([httpServer()])
 
-  app.listen(3000, () => {
-    console.log('listening to port 3000')
-  })
-}
-
-
-Promise.all([httpServer(), webSocketServer()])
 // /*
 // // arweave 업로드 코드 테스트!
 // import { init } from './api/tWeave'

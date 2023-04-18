@@ -3,11 +3,11 @@ const {S3Client, GetObjectCommand, PutObjectCommand} = require('@aws-sdk/client-
 const fs = require('fs');
 const {Readable} = require('stream')
 require('buffer')
-const crypto = require('crypto')
 
 const {createCanvas, loadImage, ImageData, Image} = require('canvas');
 const sharp = require('sharp');
 const shortid = require('shortid')
+const { sha256hash } = require('./utils')
 
 // S3 클라이언트 인스턴스 생성
 const s3Client = new S3Client({
@@ -18,9 +18,9 @@ const s3Client = new S3Client({
     }
 });
 
-console.log(process.env.S3_REGION);
-console.log(process.env.AWS_AKEY);
-console.log(process.env.AWS_SKEY);
+// console.log(process.env.S3_REGION);
+// console.log(process.env.AWS_AKEY);
+// console.log(process.env.AWS_SKEY);
 
 // S3 버킷 이름과 객체 키
 const bucketName = process.env.S3_BUCKETNAME;
@@ -62,7 +62,7 @@ const getDrawNum = (category: number): number => {
         case 14:
             return 0 // background
         default:
-            throw 'getDrawNum out of range'
+            throw new Error('getDrawNum out of range')
     }
 }
 
@@ -249,7 +249,7 @@ type CoordinationParamsCheckResult = { msg: string, paths: Array<DrawNumPath> }
 const CoordinationParamsCheck = async (coordinationJson: any): Promise<CoordinationParamsCheckResult> => {
     try {
         const dJson = await getDressroomJson()
-        console.log('dJson::', dJson)
+        // console.log('dJson::', dJson)
         const dKey = dressroomKeys
         const paths: Array<any> = []
 
@@ -329,8 +329,11 @@ const CoordinationParamsCheck = async (coordinationJson: any): Promise<Coordinat
             }
             paths.push({drawNum: getDrawNum(6), path: cat06Mouth(val)})
         }
+
+        // 원피스가 없는 상태에서만 상의/하의를 입을 수 있음.
+        const _09 = dKey["09_onePiece"]
         const _07 = dKey["07_shirts"]
-        if (coordinationJson[_07] !== undefined) {
+        if (coordinationJson[_09] === undefined && coordinationJson[_07] !== undefined) {
             const val = coordinationJson[_07]
             if (val < 0) {
                 return {msg: '07_shirts value is less than 0.', paths: []}
@@ -341,7 +344,7 @@ const CoordinationParamsCheck = async (coordinationJson: any): Promise<Coordinat
         }
 
         const _08 = dKey["08_pants"]
-        if (coordinationJson[_08] !== undefined) {
+        if (coordinationJson[_09] === undefined && coordinationJson[_08] !== undefined) {
             const val = coordinationJson[_08]
             if (val < 0) {
                 return {msg: '08_pants value is less than 0.', paths: []}
@@ -351,7 +354,7 @@ const CoordinationParamsCheck = async (coordinationJson: any): Promise<Coordinat
             paths.push({drawNum: getDrawNum(8), path: cat08Pants(val)})
         }
 
-        const _09 = dKey["09_onePiece"]
+        // _09 is 09_onePiece
         if (coordinationJson[_09] !== undefined) {
             const val = coordinationJson[_09]
             if (val < 0) {
@@ -431,7 +434,7 @@ const MakeCoordinationImage = async (coordinationJson: any) => {
         try {
             const result = await CoordinationParamsCheck(coordinationJson)
             if (result.msg !== 'success') {
-                console.log('뭐지??')
+                // console.log('뭐지??')
                 console.log(result.msg)
                 return result.msg
             }
@@ -528,7 +531,7 @@ const GetTokenId = async (coordinationJson: any) => {
 
     tokenStr += HASH_ADD_TEXT
 
-    const hash = await sha256(tokenStr)
+    const hash = await sha256hash(tokenStr)
 
     return hash
 }
@@ -536,7 +539,7 @@ const GetTokenId = async (coordinationJson: any) => {
 // 테스트넷에 사용될 토큰 아이디.
 const GetRandTokenId = async () => {
     const sId = shortid.generate();
-    const hash = await sha256(sId)
+    const hash = await sha256hash(sId)
     return hash
 }
 
@@ -576,12 +579,6 @@ async function testImage() {
         shirts: 1,
         pants: 1
     })
-}
-
-async function sha256(message: string): Promise<string> {
-    const hash = crypto.createHash('sha256');
-    hash.update(message);
-    return hash.digest('hex');
 }
 
 async function test() {
